@@ -34,7 +34,7 @@ export function DonutChart({ holdings, focusedTicker, onSelect, children }: Donu
     GAP,
   );
 
-  function handleKeyDown(event: KeyboardEvent<SVGPathElement>, tickerSymbol: string) {
+  function handleKeyDown(event: KeyboardEvent<SVGGElement>, tickerSymbol: string) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onSelect(tickerSymbol);
@@ -52,11 +52,11 @@ export function DonutChart({ holdings, focusedTicker, onSelect, children }: Donu
         {holdings.map((holding, index) => {
           const isFocused = focusedTicker === holding.tickerSymbol;
           const isDimmed = focusedTicker !== null && !isFocused;
+          const d = describeRingSegment(CENTER, CENTER, OUTER_RADIUS, INNER_RADIUS, arcs[index]);
           return (
-            <path
+            // 1要素 = 1ボタン。見た目の図形と、クリックを受ける図形を分けている(下記)。
+            <g
               key={holding.tickerSymbol}
-              d={describeRingSegment(CENTER, CENTER, OUTER_RADIUS, INNER_RADIUS, arcs[index])}
-              fill={segmentColor(index)}
               role="button"
               tabIndex={0}
               aria-pressed={isFocused}
@@ -66,13 +66,36 @@ export function DonutChart({ holdings, focusedTicker, onSelect, children }: Donu
               onClick={() => onSelect(holding.tickerSymbol)}
               onKeyDown={(event) => handleKeyDown(event, holding.tickerSymbol)}
               className={[
-                "origin-center cursor-pointer outline-none [transform-box:view-box]",
-                "transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
-                "focus-visible:stroke-foreground focus-visible:[stroke-width:2]",
-                isFocused ? "scale-[1.05]" : "",
-                isDimmed ? "opacity-25" : "opacity-100",
+                "group cursor-pointer outline-none",
+                "transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                // 半透過中の要素も、ホバーで少し濃くして選び直せることを示す。
+                isDimmed ? "opacity-25 hover:opacity-60" : "opacity-100",
               ].join(" ")}
-            />
+            >
+              {/* 見た目の図形。フォーカスやホバーで拡大する。 */}
+              <path
+                d={d}
+                fill={segmentColor(index)}
+                data-segment-shape=""
+                className={[
+                  "pointer-events-none origin-center [transform-box:view-box]",
+                  // Tailwind v4 の scale-* は transform ではなく CSS の scale プロパティを使うため、
+                  // トランジション対象にも scale を指定する(transform だと拡大がアニメーションしない)。
+                  "transition-[scale,filter] duration-200 ease-out motion-reduce:transition-none",
+                  "group-focus-visible:stroke-foreground group-focus-visible:[stroke-width:2]",
+                  // ホバーで少し浮かせて、クリックできることを示す。Tailwind の hover: は
+                  // マウスなどホバーできる環境でだけ効くため、タップ後に強調が残ることはない。
+                  isFocused
+                    ? "scale-[1.05]"
+                    : "group-hover:scale-[1.03] group-hover:brightness-110",
+                ].join(" ")}
+              />
+              {/*
+                クリック・ホバーを受ける透明な図形。拡大しないので、当たり判定は常に元の形のまま。
+                見た目の図形で判定すると、内側の縁で拡大 → カーソルが外れる → 縮小 を繰り返してちらつく。
+              */}
+              <path d={d} fill="transparent" />
+            </g>
           );
         })}
       </svg>

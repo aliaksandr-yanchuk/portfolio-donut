@@ -12,9 +12,9 @@ function setup() {
   return { user };
 }
 
-// チャートの要素(SVG の path)と一覧の行は、どちらも data-holding-ticker を持つ。
+// チャートの要素(SVG の g)と一覧の行は、どちらも data-holding-ticker を持つ。
 const segment = (ticker: string) =>
-  document.querySelector<SVGPathElement>(`path[data-holding-ticker="${ticker}"]`)!;
+  document.querySelector<SVGGElement>(`g[data-holding-ticker="${ticker}"]`)!;
 const row = (ticker: string) =>
   document.querySelector<HTMLButtonElement>(`button[data-holding-ticker="${ticker}"]`)!;
 const stateOf = (element: Element) => element.getAttribute("data-state");
@@ -36,7 +36,7 @@ describe("PortfolioView", () => {
       setup();
       const expected = ["VOO", "NVDA", "GOOGL", "AAPL", "TSLA", "PLTR", "NET"];
 
-      const segmentOrder = [...document.querySelectorAll("path[data-holding-ticker]")].map((el) =>
+      const segmentOrder = [...document.querySelectorAll("g[data-holding-ticker]")].map((el) =>
         el.getAttribute("data-holding-ticker"),
       );
       const rowOrder = [...document.querySelectorAll("button[data-holding-ticker]")].map((el) =>
