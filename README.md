@@ -51,18 +51,28 @@ src/
 │   ├── api/fetch-portfolio.ts        # API の呼び出しとレスポンス検証
 │   ├── components/
 │   │   ├── portfolio-screen.tsx      # データ取得と、読み込み中・エラー・表示の出し分け
-│   │   ├── portfolio-view.tsx        # チャートと一覧のフォーカス状態を一元管理
+│   │   ├── portfolio-view.tsx        # チャートと一覧の組み立て
 │   │   ├── donut-chart.tsx           # SVG のドーナツチャート
 │   │   ├── portfolio-summary.tsx     # チャート中央の表示
 │   │   ├── holding-list.tsx / holding-list-item.tsx
 │   │   └── gain-text.tsx             # 評価損益の表示(色と符号)
-│   ├── hooks/use-portfolio.ts        # 取得状態の管理と再取得
+│   ├── hooks/
+│   │   ├── use-portfolio.ts          # 取得状態の管理と再取得
+│   │   └── use-holding-focus.ts      # フォーカス状態(クリック・Esc・↑↓キー)の管理
 │   ├── mocks/portfolio.json          # 課題で提供されたダミーレスポンス
 │   ├── schemas.ts                    # Zod スキーマ(snake_case → camelCase への変換を含む)
-│   └── utils/                        # 並び替え・チャートの角度計算・配色
-├── components/asset-logo.tsx         # 読み込み失敗時に代替表示するロゴ
+│   └── utils/                        # 並び替え・前後の銘柄・チャートの角度計算・配色
+├── components/                       # 汎用部品(ロゴ、コピーボタン)
+├── hooks/use-delayed-loading.ts      # スケルトンの表示タイミング
 └── utils/format.ts                   # 金額・割合・符号の書式、損益の区分
 ```
+
+コードの置き場所は「使う場所の近くに置く」を基本にしています。
+
+- 1つのコンポーネントだけが使う部品(スケルトン、アイコンなど)は、同じファイルに置く
+- 状態や副作用を持つロジックは、カスタムフックに切り出す(例: `use-holding-focus.ts`)
+- 機能固有の純粋な処理は `features/portfolio/utils/` に置き、単体でテストする
+- 複数の機能で使える汎用的なものだけを、`src/components/`・`src/hooks/`・`src/utils/` に置く
 
 ## データの流れ
 
