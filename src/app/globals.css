@@ -82,6 +82,11 @@
 }
 
 body {
+  /*
+   * 対応する最小の画面幅。現在のスマートフォンの最小幅で、WCAG のリフロー基準(320 CSS px)でもある。
+   * これより狭いウィンドウでは、レイアウトを崩さずに横スクロールで表示する。
+   */
+  min-width: 320px;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);

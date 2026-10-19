@@ -46,21 +46,29 @@ export function HoldingListItem({
           style={{ background: color }}
         />
         <AssetLogo src={holding.logoUrl} tickerSymbol={holding.tickerSymbol} />
+        {/*
+          上段(銘柄名|保有金額)と下段(ティッカー・保有割合|評価損益)を、それぞれ独立した行にする。
+          行ごとに幅を分け合うため、幅の狭い画面でも、銘柄名は短い保有金額とだけ幅を争い、
+          長い評価損益に押しつぶされない。(グリッドにすると列幅が上下の行で共有され、
+          右の列が評価損益の幅になってしまうため、行ごとの flex にしている)
+        */}
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-sm font-medium sm:text-base">{holding.name}</span>
-          <span className="text-muted text-xs tabular-nums sm:text-sm">
-            {holding.tickerSymbol} / {formatPercent(holding.holdingRatio)}
+          <span className="flex items-baseline justify-between gap-3">
+            <span className="truncate text-sm font-medium sm:text-base">{holding.name}</span>
+            <span className="shrink-0 text-sm font-medium tabular-nums sm:text-base">
+              {formatYen(holding.assetAmount)}
+            </span>
           </span>
-        </span>
-        <span className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="text-sm font-medium tabular-nums sm:text-base">
-            {formatYen(holding.assetAmount)}
+          <span className="flex items-baseline justify-between gap-3">
+            <span className="text-muted truncate text-xs whitespace-nowrap tabular-nums sm:text-sm">
+              {holding.tickerSymbol} / {formatPercent(holding.holdingRatio)}
+            </span>
+            <GainText
+              amount={holding.gainAmount}
+              ratio={holding.gainRatio}
+              className="shrink-0 text-xs whitespace-nowrap sm:text-sm"
+            />
           </span>
-          <GainText
-            amount={holding.gainAmount}
-            ratio={holding.gainRatio}
-            className="text-xs sm:text-sm"
-          />
         </span>
       </button>
     </li>

@@ -207,3 +207,41 @@ test("画面幅に収まり、横スクロールが発生しない", async ({ pa
   }));
   expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
 });
+
+test.describe("幅の狭い画面", () => {
+  // 画面幅を直接変えるため、PC の設定でのみ実行する(スマートフォンの設定では画面幅が固定)。
+  test.skip(({ isMobile }) => isMobile, "画面幅を変えて確認するため PC のみ");
+
+  test("最小幅(320px)でも横スクロールがなく、一覧の各行が崩れない", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+
+    const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(pageWidth).toBeLessThanOrEqual(320);
+
+    // 「ティッカー / 保有割合」は1行に収まる(改行しない)。
+    const meta = row(page, "VOO").getByText("VOO / 39.8%");
+    const lineHeight = await meta.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+    expect((await meta.boundingBox())!.height).toBeLessThan(lineHeight * 1.5);
+
+    // 短い銘柄名は省略されずに表示される(一番長い銘柄名だけ末尾が省略される)。
+    const nvidia = row(page, "NVDA").getByText("NVIDIA", { exact: true });
+    expect(await nvidia.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  });
+
+  // 改善前は、銘柄名が評価損益(右下の長いテキスト)と幅を分け合っていたため、
+  // 412px 未満では一番長い銘柄名が省略されていた。
+  test("375px(小型のスマートフォン)では、一番長い銘柄名も省略されない", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 700 });
+
+    const voo = row(page, "VOO").getByText("S&P 500 ETF (Vanguard)", { exact: true });
+    expect(await voo.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  });
+
+  test("最小幅より狭いウィンドウでは、レイアウトを320px に保って横スクロールで表示する", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 240, height: 700 });
+
+    expect(await page.evaluate(() => document.body.getBoundingClientRect().width)).toBe(320);
+  });
+});
