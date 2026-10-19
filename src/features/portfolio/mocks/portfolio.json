@@ -1,0 +1,84 @@
+{
+  "total_asset_amount": 115500,
+  "total_gain_ratio": 15.5,
+  "total_gain_amount": 15500,
+  "holding_assets": [
+    {
+      "asset": {
+        "name": "S&P 500 ETF (Vanguard)",
+        "ticker_symbol": "VOO",
+        "logo_url": "https://storage.googleapis.com/brooklyn-asset-logo/alpaca/VOO.svg"
+      },
+      "asset_amount": 45969,
+      "gain_amount": 5242,
+      "gain_ratio": 12.87,
+      "holding_ratio": 39.8
+    },
+    {
+      "asset": {
+        "name": "NVIDIA",
+        "ticker_symbol": "NVDA",
+        "logo_url": "https://storage.googleapis.com/brooklyn-asset-logo/alpaca/NVDA.svg"
+      },
+      "asset_amount": 17556,
+      "gain_amount": 4889,
+      "gain_ratio": 38.6,
+      "holding_ratio": 15.2
+    },
+    {
+      "asset": {
+        "name": "Alphabet",
+        "ticker_symbol": "GOOGL",
+        "logo_url": "https://storage.googleapis.com/brooklyn-asset-logo/alpaca/GOOGL.svg"
+      },
+      "asset_amount": 16979,
+      "gain_amount": 1432,
+      "gain_ratio": 9.21,
+      "holding_ratio": 14.7
+    },
+    {
+      "asset": {
+        "name": "Apple",
+        "ticker_symbol": "AAPL",
+        "logo_url": "https://storage.googleapis.com/brooklyn-asset-logo/alpaca/AAPL.svg"
+      },
+      "asset_amount": 11781,
+      "gain_amount": -339,
+      "gain_ratio": -2.8,
+      "holding_ratio": 10.2
+    },
+    {
+      "asset": {
+        "name": "Tesla",
+        "ticker_symbol": "TSLA",
+        "logo_url": "https://storage.googleapis.com/brooklyn-asset-logo/alpaca/TSLA.svg"
+      },
+      "asset_amount": 11435,
+      "gain_amount": 2399,
+      "gain_ratio": 26.55,
+      "holding_ratio": 9.9
+    },
+    {
+      "asset": {
+        "name": "Palantir",
+        "ticker_symbol": "PLTR",
+        "logo_url": "https://storage.googleapis.com/brooklyn-asset-logo/alpaca/PLTR.svg"
+      },
+      "asset_amount": 6006,
+      "gain_amount": 1023,
+      "gain_ratio": 20.53,
+      "holding_ratio": 5.2
+    },
+    {
+      "asset": {
+        "name": "Cloudflare",
+        "ticker_symbol": "NET",
+        "logo_url": "https://storage.googleapis.com/brooklyn-asset-logo/alpaca/NET.svg"
+      },
+      "asset_amount": 5774,
+      "gain_amount": 854,
+      "gain_ratio": 17.36,
+      "holding_ratio": 5.0
+    }
+  ]
+}

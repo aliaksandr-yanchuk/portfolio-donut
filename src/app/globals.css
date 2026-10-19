@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
+/*
+ * デザイントークン。コンポーネントは意味のある名前(text-muted, text-gain-positive …)だけを使い、
+ * 実際の色はここで定義する。ダークモードでは変数の値だけを切り替える。
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-muted: #eef0f4;
+  --foreground: #14171f;
+  --muted: #5d6474;
+  --border: #e3e6ec;
+  --accent: #3d5afe;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* 損益の色。プラスは緑、マイナスは赤、ゼロはグレー(白背景でコントラスト比 4.5:1 以上)。 */
+  --gain-positive: #0f8a47;
+  --gain-negative: #d0312d;
+  --gain-zero: #6b7280;
+
+  /* チャートの配色。損益の緑・赤と混同しないよう、また隣り合う色が似ないように選んでいる。 */
+  --segment-1: #3d5afe;
+  --segment-2: #00a3bf;
+  --segment-3: #8b5cf6;
+  --segment-4: #f59e0b;
+  --segment-5: #ec4899;
+  --segment-6: #475569;
+  --segment-7: #14b8a6;
+  --segment-8: #a3a3a3;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f1115;
+    --surface: #171a21;
+    --surface-muted: #222631;
+    --foreground: #eef0f4;
+    --muted: #9aa1b2;
+    --border: #2b303c;
+    --accent: #7b8cff;
+
+    --gain-positive: #3ccf7f;
+    --gain-negative: #ff6b66;
+    --gain-zero: #9aa1b2;
+
+    --segment-1: #6f86ff;
+    --segment-2: #22c3dd;
+    --segment-3: #a78bfa;
+    --segment-4: #fbbf24;
+    --segment-5: #f472b6;
+    --segment-6: #94a3b8;
+    --segment-7: #2dd4bf;
+    --segment-8: #d4d4d4;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-gain-positive: var(--gain-positive);
+  --color-gain-negative: var(--gain-negative);
+  --color-gain-zero: var(--gain-zero);
+  --font-sans:
+    var(--font-geist-sans), "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  /* タップ時の青いハイライトを消す(押下状態は各要素のスタイルで表現する)。 */
+  -webkit-tap-highlight-color: transparent;
 }
