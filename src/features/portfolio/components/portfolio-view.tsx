@@ -23,21 +23,12 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   return (
     <div className="flex flex-1 flex-col gap-8 py-6 sm:gap-10">
       <DonutChart holdings={holdings} focusedTicker={focusedTicker} onSelect={toggleFocus}>
-        {focusedHolding ? (
-          <PortfolioSummary
-            label={focusedHolding.name}
-            amount={focusedHolding.assetAmount}
-            gainAmount={focusedHolding.gainAmount}
-            gainRatio={focusedHolding.gainRatio}
-          />
-        ) : (
-          <PortfolioSummary
-            label="資産総額"
-            amount={portfolio.totalAssetAmount}
-            gainAmount={portfolio.totalGainAmount}
-            gainRatio={portfolio.totalGainRatio}
-          />
-        )}
+        <PortfolioSummary
+          label={focusedHolding?.name || "資産総額"}
+          amount={focusedHolding?.assetAmount || portfolio.totalAssetAmount}
+          gainAmount={focusedHolding?.gainAmount || portfolio.totalGainAmount}
+          gainRatio={focusedHolding?.gainRatio || portfolio.totalGainRatio}
+        />
       </DonutChart>
       <HoldingList holdings={holdings} focusedTicker={focusedTicker} onSelect={toggleFocus} />
     </div>
