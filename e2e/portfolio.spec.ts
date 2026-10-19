@@ -9,12 +9,12 @@ const segmentShape = (page: Page, ticker: string) =>
 const row = (page: Page, ticker: string) => page.locator(`button[data-holding-ticker="${ticker}"]`);
 
 /**
- * チャートの要素の上にマウスを移動する。
- * Playwright の hover() は要素の外接矩形の中心を狙うが、円弧状の要素では
+ * チャートの要素の上にある画面上の点を返す。
+ * Playwright の hover() などは要素の外接矩形の中心を狙うが、円弧状の要素では
  * その点がドーナツの穴に落ちることがある。そのため、実際に塗られている点を探して使う。
  */
-async function hoverSegment(page: Page, ticker: string) {
-  const point = await segment(page, ticker).evaluate((element) => {
+function pointOnSegment(page: Page, ticker: string) {
+  return segment(page, ticker).evaluate((element) => {
     // 拡大しない、クリックを受ける側の図形で判定する。
     const path = element.querySelector("path:last-of-type") as SVGPathElement;
     const box = path.getBBox();
@@ -30,6 +30,10 @@ async function hoverSegment(page: Page, ticker: string) {
     }
     throw new Error(`No filled point found for ${ticker}`);
   });
+}
+
+async function hoverSegment(page: Page, ticker: string) {
+  const point = await pointOnSegment(page, ticker);
   await page.mouse.move(point.x, point.y);
 }
 
@@ -89,6 +93,22 @@ test("マウスでホバーすると要素が少し拡大し、クリックで�
   // 半透過中の要素は、ホバーで少し濃くなる。
   await hoverSegment(page, "VOO");
   await expect(segment(page, "VOO")).toHaveCSS("opacity", "0.6");
+});
+
+// 不具合の再発防止: 要素をすばやく続けてクリックすると、ブラウザの「ダブルクリックで単語を選択」
+// 「トリプルクリックで行を選択」が働き、チャートにはテキストがないため、
+// 最も近いチャート中央のテキスト(銘柄名など)が選択されてしまっていた。
+test("要素をすばやく続けてクリックしても、チャート中央のテキストが選択されない", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "連続クリックはマウス操作のある環境のみ");
+
+  const point = await pointOnSegment(page, "VOO");
+  for (const clickCount of [2, 3]) {
+    await page.mouse.click(point.x, point.y, { clickCount });
+    expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("");
+  }
 });
 
 test("スマートフォンでは、タップ後にホバーの強調が残らない", async ({ page, isMobile }) => {

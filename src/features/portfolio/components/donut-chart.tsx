@@ -1,6 +1,6 @@
 "use client";
 
-import type { KeyboardEvent, ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import type { Holding } from "@/features/portfolio/schemas";
 import { computeArcs, describeRingSegment } from "@/features/portfolio/utils/donut-geometry";
 import { segmentColor } from "@/features/portfolio/utils/segment-colors";
@@ -41,6 +41,13 @@ export function DonutChart({ holdings, focusedTicker, onSelect, children }: Donu
     }
   }
 
+  // すばやく続けてクリックすると、ブラウザの「ダブルクリックで単語選択・トリプルクリックで行選択」が働く。
+  // チャートの要素にはテキストがないため、最も近いチャート中央のテキストが選択されてしまう。
+  // 2回目以降のクリックだけ既定の動作(テキスト選択)を止める。クリック自体の処理は変わらない。
+  function preventMultiClickSelection(event: MouseEvent<SVGGElement>) {
+    if (event.detail > 1) event.preventDefault();
+  }
+
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[320px]">
       <svg
@@ -63,6 +70,7 @@ export function DonutChart({ holdings, focusedTicker, onSelect, children }: Donu
               aria-label={`${holding.name} (${holding.tickerSymbol}) ${formatPercent(holding.holdingRatio)}`}
               data-holding-ticker={holding.tickerSymbol}
               data-state={isFocused ? "focused" : isDimmed ? "dimmed" : "default"}
+              onMouseDown={preventMultiClickSelection}
               onClick={() => onSelect(holding.tickerSymbol)}
               onKeyDown={(event) => handleKeyDown(event, holding.tickerSymbol)}
               className={[
