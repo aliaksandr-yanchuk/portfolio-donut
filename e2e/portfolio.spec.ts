@@ -160,6 +160,22 @@ test("一覧の行をタップしてもフォーカスでき、もう一度タ�
   await expect(segment(page, "AAPL")).toHaveAttribute("aria-pressed", "false");
 });
 
+test("API の応答が遅い場合は、スケルトンを表示してからポートフォリオを表示する", async ({
+  page,
+}) => {
+  // 応答を 1 秒遅らせる。
+  await page.route("**/api/portfolio", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await route.continue();
+  });
+  await page.reload();
+
+  const skeleton = page.locator('[aria-busy="true"] .animate-pulse').first();
+  await expect(skeleton).toBeVisible();
+  await expect(page.getByTestId("summary-amount")).toHaveText("¥115,500");
+  await expect(skeleton).toHaveCount(0);
+});
+
 test("画面幅に収まり、横スクロールが発生しない", async ({ page }) => {
   const { scrollWidth, innerWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
