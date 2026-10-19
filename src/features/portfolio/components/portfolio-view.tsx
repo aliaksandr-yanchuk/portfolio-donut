@@ -20,15 +20,27 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
   const holdings = useMemo(() => sortHoldingsByRatio(portfolio.holdings), [portfolio.holdings]);
   const { focusedTicker, focusedHolding, toggleFocus } = useHoldingFocus(holdings);
 
+  // 中央に表示する値は、フォーカス中の銘柄か全体かを一度だけ判定し、4つの値をまとめて決める。
+  // 値ごとに `a || b` で切り替えると、損益が 0 の銘柄で 0 が「値なし」とみなされ、
+  // 全体の値が混ざって表示されてしまう(銘柄名と全体の損益の組み合わせになる)。
+  const summary = focusedHolding
+    ? {
+        label: focusedHolding.name,
+        amount: focusedHolding.assetAmount,
+        gainAmount: focusedHolding.gainAmount,
+        gainRatio: focusedHolding.gainRatio,
+      }
+    : {
+        label: "資産総額",
+        amount: portfolio.totalAssetAmount,
+        gainAmount: portfolio.totalGainAmount,
+        gainRatio: portfolio.totalGainRatio,
+      };
+
   return (
     <div className="flex flex-1 flex-col gap-8 py-6 sm:gap-10">
       <DonutChart holdings={holdings} focusedTicker={focusedTicker} onSelect={toggleFocus}>
-        <PortfolioSummary
-          label={focusedHolding?.name || "資産総額"}
-          amount={focusedHolding?.assetAmount || portfolio.totalAssetAmount}
-          gainAmount={focusedHolding?.gainAmount || portfolio.totalGainAmount}
-          gainRatio={focusedHolding?.gainRatio || portfolio.totalGainRatio}
-        />
+        <PortfolioSummary {...summary} />
       </DonutChart>
       <HoldingList holdings={holdings} focusedTicker={focusedTicker} onSelect={toggleFocus} />
     </div>

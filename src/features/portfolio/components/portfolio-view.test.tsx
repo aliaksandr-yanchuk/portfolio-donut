@@ -6,9 +6,9 @@ import { PortfolioView } from "./portfolio-view";
 
 const portfolio = portfolioResponseSchema.parse(mockResponse);
 
-function setup() {
+function setup(data = portfolio) {
   const user = userEvent.setup();
-  render(<PortfolioView portfolio={portfolio} />);
+  render(<PortfolioView portfolio={data} />);
   return { user };
 }
 
@@ -92,6 +92,23 @@ describe("PortfolioView", () => {
       expect(within(summary()).getByText("Apple")).toBeInTheDocument();
       expect(screen.getByTestId("summary-amount")).toHaveTextContent("¥11,781");
       expect(within(summary()).getByText("-2.8% (-¥339)")).toHaveAttribute("data-tone", "negative");
+    });
+
+    // 不具合の再発防止: 0 を「値なし」とみなすと、損益ゼロの銘柄にポートフォリオ全体の損益が表示されていた。
+    it("損益がゼロの銘柄をフォーカスすると、全体の損益ではなく、その銘柄のゼロをグレーで表示する", async () => {
+      const withZeroGain = {
+        ...portfolio,
+        holdings: portfolio.holdings.map((holding) =>
+          holding.tickerSymbol === "NET" ? { ...holding, gainAmount: 0, gainRatio: 0 } : holding,
+        ),
+      };
+      const { user } = setup(withZeroGain);
+
+      await user.click(segment("NET"));
+
+      expect(within(summary()).getByText("Cloudflare")).toBeInTheDocument();
+      expect(within(summary()).getByText("0.0% (¥0)")).toHaveAttribute("data-tone", "zero");
+      expect(within(summary()).queryByText("+15.5% (+¥15,500)")).toBeNull();
     });
 
     it("フォーカス中の要素をもう一度クリックすると、フォーカスを外す", async () => {
