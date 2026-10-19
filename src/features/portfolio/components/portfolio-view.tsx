@@ -27,9 +27,11 @@ export function PortfolioView({ portfolio }: PortfolioViewProps) {
 
   // 画面のどこをクリックしても判定できるよう、document で受け取る。
   // 銘柄の要素は自分の onClick でフォーカスを切り替えるので、それ以外のクリックだけ解除する。
+  // data-preserve-focus を付けた操作(金額のコピーなど)は、フォーカスを保ったままにする。
   useEffect(() => {
     function handleClick(event: MouseEvent) {
-      if (!(event.target instanceof Element) || !event.target.closest("[data-holding-ticker]")) {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target?.closest("[data-holding-ticker], [data-preserve-focus]")) {
         setFocusedTicker(null);
       }
     }

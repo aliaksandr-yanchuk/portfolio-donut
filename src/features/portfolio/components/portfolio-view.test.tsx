@@ -18,7 +18,7 @@ const segment = (ticker: string) =>
 const row = (ticker: string) =>
   document.querySelector<HTMLButtonElement>(`button[data-holding-ticker="${ticker}"]`)!;
 const stateOf = (element: Element) => element.getAttribute("data-state");
-const summary = () => screen.getByTestId("summary-amount").parentElement!;
+const summary = () => screen.getByTestId("portfolio-summary");
 
 describe("PortfolioView", () => {
   describe("初期表示", () => {
@@ -140,6 +140,17 @@ describe("PortfolioView", () => {
 
       expect(stateOf(segment("GOOGL"))).toBe("focused");
       expect(stateOf(row("GOOGL"))).toBe("focused");
+    });
+
+    it("金額のコピーボタンを押しても、フォーカスは外れず、その銘柄の金額をコピーする", async () => {
+      const { user } = setup();
+      const writeText = jest.spyOn(navigator.clipboard, "writeText");
+
+      await user.click(segment("NVDA"));
+      await user.click(screen.getByRole("button", { name: "金額をコピー" }));
+
+      expect(writeText).toHaveBeenCalledWith("¥17,556");
+      expect(stateOf(segment("NVDA"))).toBe("focused");
     });
 
     it("キーボードでも操作でき、Esc キーでフォーカスを外す", async () => {

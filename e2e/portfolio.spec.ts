@@ -44,7 +44,7 @@ test.beforeEach(async ({ page }) => {
 
 test("API から取得したポートフォリオを、チャートと一覧で表示する", async ({ page }) => {
   await expect(page.getByTestId("summary-amount")).toHaveText("¥115,500");
-  await expect(page.getByText("+15.5% (+¥15,500)")).toBeVisible();
+  await expect(page.getByText("+15.5% (+¥15,500)", { exact: true })).toBeVisible();
   await expect(page.locator("g[data-holding-ticker]")).toHaveCount(7);
   await expect(page.locator("button[data-holding-ticker]")).toHaveCount(7);
 });
@@ -109,6 +109,38 @@ test("要素をすばやく続けてクリックしても、チャート中央�
     await page.mouse.click(point.x, point.y, { clickCount });
     expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("");
   }
+});
+
+test("チャート中央のテキストは、ダブルクリックしても選択されない", async ({ page, isMobile }) => {
+  test.skip(isMobile, "ダブルクリックはマウス操作のある環境のみ");
+
+  // 中央の表示はクリックを透過させているため(背景扱い)、要素ではなく画面上の座標をダブルクリックする。
+  for (const target of [
+    page.getByText("資産総額", { exact: true }),
+    page.getByTestId("summary-amount"),
+  ]) {
+    const box = (await target.boundingBox())!;
+    await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
+  }
+
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("");
+});
+
+test("金額のコピーボタンで、表示中の金額をクリップボードにコピーする", async ({
+  page,
+  context,
+  isMobile,
+}) => {
+  test.skip(isMobile, "クリップボードの読み取り権限は PC の Chrome でのみ付与できる");
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
+  // フォーカス中は、その銘柄の金額をコピーする。コピーしてもフォーカスは外れない。
+  await segment(page, "NVDA").click();
+  await page.getByRole("button", { name: "金額をコピー" }).click();
+
+  await expect(page.getByRole("status")).toHaveText("コピーしました");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("¥17,556");
+  await expect(segment(page, "NVDA")).toHaveAttribute("aria-pressed", "true");
 });
 
 test("スマートフォンでは、タップ後にホバーの強調が残らない", async ({ page, isMobile }) => {
