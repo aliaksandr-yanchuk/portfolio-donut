@@ -153,6 +153,62 @@ describe("PortfolioView", () => {
       expect(stateOf(segment("NVDA"))).toBe("focused");
     });
 
+    describe("↑↓キーでの移動", () => {
+      it("フォーカス中は、↓で次・↑で前の銘柄にフォーカスを移し、中央の表示も切り替える", async () => {
+        const { user } = setup();
+
+        await user.click(segment("NVDA"));
+        await user.keyboard("{ArrowDown}");
+        expect(stateOf(segment("GOOGL"))).toBe("focused");
+        expect(stateOf(row("GOOGL"))).toBe("focused");
+        expect(screen.getByTestId("summary-amount")).toHaveTextContent("¥16,979");
+
+        await user.keyboard("{ArrowUp}{ArrowUp}");
+        expect(stateOf(segment("VOO"))).toBe("focused");
+      });
+
+      it("先頭・末尾では止まる", async () => {
+        const { user } = setup();
+
+        await user.click(segment("VOO"));
+        await user.keyboard("{ArrowUp}");
+        expect(stateOf(segment("VOO"))).toBe("focused");
+
+        await user.click(row("NET"));
+        await user.keyboard("{ArrowDown}");
+        expect(stateOf(segment("NET"))).toBe("focused");
+      });
+
+      it("フォーカスがないときは、矢印キーで何も選ばない", async () => {
+        const { user } = setup();
+
+        await user.keyboard("{ArrowDown}");
+
+        expect(document.querySelector('[data-state="focused"]')).toBeNull();
+      });
+
+      it("キーボードのフォーカスも、同じ種類の次の要素(一覧の行)へ移る", async () => {
+        const { user } = setup();
+
+        row("TSLA").focus();
+        await user.keyboard("{Enter}");
+        await user.keyboard("{ArrowDown}");
+
+        expect(row("PLTR")).toHaveFocus();
+        expect(stateOf(row("PLTR"))).toBe("focused");
+      });
+
+      it("キーボードのフォーカスも、同じ種類の次の要素(チャートの要素)へ移る", async () => {
+        const { user } = setup();
+
+        segment("NVDA").focus();
+        await user.keyboard("{Enter}");
+        await user.keyboard("{ArrowUp}");
+
+        expect(segment("VOO")).toHaveFocus();
+      });
+    });
+
     it("キーボードでも操作でき、Esc キーでフォーカスを外す", async () => {
       const { user } = setup();
 

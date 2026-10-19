@@ -160,6 +160,30 @@ test("一覧の行をタップしてもフォーカスでき、もう一度タ�
   await expect(segment(page, "AAPL")).toHaveAttribute("aria-pressed", "false");
 });
 
+test("フォーカス中は↑↓キーで銘柄を移動でき、画面外の行は見える位置までスクロールする", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "キーボード操作は PC のみ");
+
+  // VOO は大きな円弧のため、外接矩形の中心(ドーナツの穴)ではなく、塗られた点をクリックする。
+  const voo = await pointOnSegment(page, "VOO");
+  await page.mouse.click(voo.x, voo.y);
+  for (let i = 0; i < 6; i++) await page.keyboard.press("ArrowDown");
+
+  // 一番下の銘柄までフォーカスが移り、その行が画面内に表示されている。
+  await expect(segment(page, "NET")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("summary-amount")).toHaveText("¥5,774");
+  await expect(row(page, "NET")).toBeInViewport();
+
+  // 末尾では止まる。
+  await page.keyboard.press("ArrowDown");
+  await expect(segment(page, "NET")).toHaveAttribute("aria-pressed", "true");
+
+  await page.keyboard.press("ArrowUp");
+  await expect(segment(page, "PLTR")).toHaveAttribute("aria-pressed", "true");
+});
+
 test("API の応答が遅い場合は、スケルトンを表示してからポートフォリオを表示する", async ({
   page,
 }) => {
