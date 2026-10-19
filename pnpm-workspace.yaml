@@ -1,3 +1,8 @@
+# インストール時のビルドスクリプトの実行可否。
+# pnpm 12 は、ここに記載のないパッケージがビルドスクリプトを持つと `pnpm install` を失敗させるため、
+# すべて明示する。いずれも配布済みのバイナリで動くため、ビルドは不要。
 allowBuilds:
   sharp: false
   unrs-resolver: false
+  # Jest のファイル監視用(任意のネイティブ機能)。
+  "@parcel/watcher": false
