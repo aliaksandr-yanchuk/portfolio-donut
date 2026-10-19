@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ポートフォリオ表示アプリ
 
-## Getting Started
+顧客の保有株式のポートフォリオを、ドーナツ型のパイチャートと保有銘柄の一覧で表示する Web アプリケーションです(Webフロントエンドエンジニア向けコーディング試験の提出物)。
 
-First, run the development server:
+| 通常表示                     | フォーカス時                           | ダークモード                          |
+| ---------------------------- | -------------------------------------- | ------------------------------------- |
+| ![通常表示](docs/mobile.png) | ![フォーカス時](docs/mobile-focus.png) | ![ダークモード](docs/mobile-dark.png) |
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+## 起動方法
+
+```sh
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 で確認できます。Node.js 20.9 以上が必要です(開発は Node.js 24 で行いました)。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## コマンド
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| コマンド                            | 内容                                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------- |
+| `pnpm dev`                          | 開発サーバーを起動する                                                          |
+| `pnpm build` / `pnpm start`         | 本番ビルドと起動                                                                |
+| `pnpm lint`                         | ESLint                                                                          |
+| `pnpm format` / `pnpm format:check` | Prettier による整形 / 整形済みかの確認                                          |
+| `pnpm typecheck`                    | TypeScript の型チェック                                                         |
+| `pnpm test`                         | 単体テスト・コンポーネントテスト(Jest + React Testing Library)                  |
+| `pnpm test:e2e`                     | E2E テスト(Playwright。初回のみ `pnpm exec playwright install chromium` が必要) |
 
-## Learn More
+## 技術構成
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 16(App Router)/ React 19 / TypeScript(strict)**
+- **Tailwind CSS v4** と CSS 変数によるデザイントークン(ダークモード対応)
+- **Zod**: API レスポンスの実行時検証と型の生成
+- **ESLint + Prettier**: Next.js 標準のルールに、書式は Prettier を組み合わせています
+- **Jest + React Testing Library / Playwright**: テスト
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+パイチャートはグラフライブラリを使わず、SVG で自前実装しています。「12時起点・保有割合の降順・時計回り」「要素間の隙間」「フォーカス時の半透過と強調」「キーボード操作」をすべて意図どおりに制御するためです。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ディレクトリ構成
 
-## Deploy on Vercel
+機能単位でまとめる構成(feature-based)を採用しています。ポートフォリオ機能のコードは `src/features/portfolio/` に集約し、他の機能でも使える汎用的なものだけを `src/components/`・`src/utils/` に置いています。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/
+│   ├── page.tsx                      # 画面の組み立てのみ
+│   ├── globals.css                   # デザイントークン(CSS 変数)
+│   └── api/portfolio/route.ts        # 課題のダミーレスポンスを返すモック API
+├── features/portfolio/
+│   ├── api/fetch-portfolio.ts        # API の呼び出しとレスポンス検証
+│   ├── components/
+│   │   ├── portfolio-screen.tsx      # データ取得と、読み込み中・エラー・表示の出し分け
+│   │   ├── portfolio-view.tsx        # チャートと一覧のフォーカス状態を一元管理
+│   │   ├── donut-chart.tsx           # SVG のドーナツチャート
+│   │   ├── portfolio-summary.tsx     # チャート中央の表示
+│   │   ├── holding-list.tsx / holding-list-item.tsx
+│   │   └── gain-text.tsx             # 評価損益の表示(色と符号)
+│   ├── hooks/use-portfolio.ts        # 取得状態の管理と再取得
+│   ├── mocks/portfolio.json          # 課題で提供されたダミーレスポンス
+│   ├── schemas.ts                    # Zod スキーマ(snake_case → camelCase への変換を含む)
+│   └── utils/                        # 並び替え・チャートの角度計算・配色
+├── components/asset-logo.tsx         # 読み込み失敗時に代替表示するロゴ
+└── utils/format.ts                   # 金額・割合・符号の書式、損益の区分
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## データの流れ
+
+1. 画面はクライアント側で `GET /api/portfolio` を呼び出します(SPA)。モック API は課題のダミーレスポンスをそのまま返すため、実際の API に差し替えても取得側のコードは変わりません。
+2. レスポンスは Zod で検証し、アプリ内では camelCase の型に変換して扱います。API の形が変わっても、影響は `schemas.ts` だけに閉じます。想定外のデータはエラー表示につながり、「再読み込み」で再取得できます。
+3. 保有銘柄は保有割合の降順に並べ、チャートと一覧の両方で同じ順序・同じ色を使います。
+
+## 仕様の解釈と設計判断
+
+### パイチャート
+
+- 12時の位置を起点に、保有割合の大きい順で時計回りに描画します。
+- 各要素の角度は `holding_ratio` の合計で正規化して計算するため、合計がちょうど100%にならないデータでも円がずれません。
+- ワイヤーフレームに合わせ、要素間に隙間を入れています。要素が1つだけの場合は隙間のない完全な円にし、非常に小さい要素も隙間で消えないようにしています。
+- 配色は、損益の緑・赤と混同せず、隣り合う色が似ないように選んでいます。一覧の各行の左端にも同じ色を表示し、チャートとの対応がわかるようにしました。
+
+### 評価損益の表示
+
+- プラスは緑、マイナスは赤、ゼロはグレーで表示します。色だけに頼らず、`+` / `-` の符号を必ず付けています(色覚の多様性への配慮)。
+- 表記はワイヤーフレームに合わせて `+15.5% (+¥15,500)` としました。割合は小数第1位〜第2位で表示します(例: `5.0%`、`12.87%`)。
+
+### 保有銘柄の一覧
+
+UI 要件の項目(ロゴ・銘柄名・ティッカー・評価損益額・評価損益率)に加え、ワイヤーフレームにある保有金額と保有割合も表示しています。ロゴ画像を読み込めなかった場合は、ティッカーの頭文字を代わりに表示します。
+
+### フォーカスの挙動
+
+UI 要件の「フォーカスされた要素以外をクリックされたらフォーカスを外す」は、次のように解釈しました。
+
+| 操作                                         | 結果                                   |
+| -------------------------------------------- | -------------------------------------- |
+| チャートの要素をクリック                     | その銘柄をフォーカスする               |
+| フォーカス中の要素を再度クリック             | フォーカスを外す                       |
+| 別の要素をクリック                           | その要素にフォーカスを移す             |
+| 要素以外(背景・余白・チャート中央)をクリック | フォーカスを外す                       |
+| 一覧の行をクリック(追加)                     | チャートと同じくフォーカスを切り替える |
+| Esc キー(追加)                               | フォーカスを外す                       |
+
+別の要素をクリックしたときは、解除してから選び直す手間がないよう、そのままフォーカスを移すことにしました。
+
+フォーカス中は、チャート・一覧の両方でフォーカス以外の銘柄を半透過にし、フォーカスした要素は少し拡大して強調します。さらに、チャート中央の表示をその銘柄の保有金額・評価損益に切り替えます(要件外の追加)。
+
+### アクセシビリティ
+
+- チャートの各要素はボタンとして扱い(`role="button"`・`aria-pressed`)、Tab キーで移動し、Enter / Space で操作できます。読み上げでは銘柄名と保有割合を伝えます。
+- チャート中央の表示が切り替わったことは `aria-live` で読み上げます。
+- OS の「視差効果を減らす」設定(`prefers-reduced-motion`)が有効な場合は、アニメーションを止めます。
+
+### レスポンシブ対応
+
+スマートフォンを基準に縦一列で配置し、PC では中央寄せで最大幅を設けています。チャートは SVG の `viewBox` で画面幅に合わせて伸縮します。スマートフォンで横スクロールが発生しないことを E2E テストで確認しています。
+
+## テスト
+
+| 種類                           | 対象                                                                                                                                                |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 単体テスト                     | 書式(金額・割合・符号)、損益の区分、降順ソート、角度計算(12時起点・時計回り・正規化・隙間・一周分の要素)、API レスポンスの検証                      |
+| コンポーネントテスト           | 中央表示、一覧の表示項目と順序、フォーカスの挙動(上の表の各操作)、読み込み中・エラー・再読み込み、ロゴ読み込み失敗時の代替表示                      |
+| E2E テスト(PC・スマートフォン) | API からの表示、最大の銘柄が12時から時計回りに描かれること、クリックでの半透過(実際の CSS の値)と解除、一覧からの操作、横スクロールが発生しないこと |
+
+E2E テストは本番ビルド(`pnpm build && pnpm start`)に対して実行します。
+
+## 開発について
+
+開発には AI コーディングツール(Claude Code)を使用しました。設計判断・仕様の解釈はすべて自分で確認・決定し、上記のテストで動作を検証しています。
